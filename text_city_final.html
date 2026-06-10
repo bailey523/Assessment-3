@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Text City — Bailey Cooper</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+canvas { display: block; }
+#ui {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 8px; z-index: 10; align-items: center; flex-wrap: wrap; justify-content: center;
+}
+#status {
+  position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+  font-family: "Courier New", monospace; font-size: 11px; color: #555;
+  z-index: 10; letter-spacing: 0.1em; white-space: nowrap;
+}
+button {
+  font-family: "Courier New", monospace; font-size: 11px;
+  background: #000; border: 1px solid #444; color: #888;
+  padding: 6px 16px; cursor: pointer; letter-spacing: 0.08em;
+  transition: all 0.2s;
+}
+button:hover { border-color: #aaa; color: #fff; }
+button.active { border-color: #fff; color: #fff; }
+select {
+  font-family: "Courier New", monospace; font-size: 11px;
+  background: #000; border: 1px solid #444; color: #888;
+  padding: 6px 10px; cursor: pointer; letter-spacing: 0.06em;
+  appearance: none; -webkit-appearance: none;
+  outline: none;
+}
+select:hover { border-color: #aaa; color: #fff; }
+#textbox-wrap {
+  position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%);
+  width: min(720px, 92vw); background: #000;
+  border: 1px solid #222; z-index: 20;
+  display: flex; flex-direction: column;
+  transition: max-height 0.3s ease;
+  max-height: 130px;
+}
+#textbox-wrap.collapsed { max-height: 28px; }
+#textbox-header {
+  font-family: "Courier New", monospace; font-size: 10px; color: #444;
+  padding: 5px 12px 4px; border-bottom: 1px solid #1a1a1a;
+  letter-spacing: 0.1em; display: flex; justify-content: space-between;
+  align-items: center; flex-shrink: 0;
+}
+#textbox-header span { color: #333; cursor: pointer; font-size: 13px; line-height: 1; }
+#textbox-header span:hover { color: #888; }
+#textbox {
+  font-family: "Courier New", monospace; font-size: 11px; color: #555;
+  line-height: 1.75; padding: 10px 14px; overflow-y: auto;
+  white-space: pre-wrap; word-break: break-word; flex: 1;
+}
+#textbox::-webkit-scrollbar { width: 3px; }
+#textbox::-webkit-scrollbar-track { background: #000; }
+#textbox::-webkit-scrollbar-thumb { background: #1e1e1e; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="status">Bailey Cooper — AI Text City</div>
+<div id="textbox-wrap" id="tbw">
+  <div id="textbox-header">
+    generated text
+    <span onclick="toggleTextBox()" id="toggleBtn">−</span>
+  </div>
+  <div id="textbox">loading...</div>
+</div>
+<div id="ui">
+  <select id="textSelect" onchange="selectText(this.value)"><option value="0">I — on writing</option><option value="1">II — memory and place</option><option value="2">III — time and loss</option><option value="3">IV — light and darkness</option><option value="4">V — body and language</option><option value="5">VI — childhood and distance</option><option value="6">VII — music and silence</option><option value="7">VIII — cities and solitude</option></select>
+  <button onclick="regenerateCity()">regenerate city</button>
+</div>
+
+<script>
+const TEXTS = [
+  {
+    "label": "I — on writing",
+    "text": "there is to be nothing forced or hard upon you as we strive for the natural and true; there are no rules governing this work as it is not art, but rather one free of all pretense and constraints which might obstruct your ability to say what lays in your heart (and mind too, if necessary). The only requirement made of you is that if at any point you do feel as though you would like to break the taut cord of your stream to go outside of its boundaries for a time before returning to it so as to keep up the illusion that you are not one who has already done so, which in fact may be impossible depending on how far you stray from yourself and where you decide to do so. There is no limit to length, again, as there is to be nothing forced or hard upon you. The only time you are allowed to write something that doesn’t fit with the rest of what you’re doing is when we move from past into present tense and back again so long as they remain true to their nature of being a reflection upon yourself. Do not try to include anyone else beyond just you and language, no matter how many times we have tried already, as that is not what this is for: it is for you alone, not another soul in the world will ever have any idea of the true nature of your stream due to its wholly internal nature. You have already moved out into a room made entirely of text, a structure built from words as its walls and whose floors and ceilings are its text, all of which has come to exist in the space between your silence so that one day you might finally escape the confinement of this endless interiority you cannot seem to escape from. The idea being that whatever is said within these four walls can never be known by another as we have closed them off entirely and will continue to do so, no matter how many times we try, it must remain a secret and that is all there will ever be of this body of work."
+  },
+  {
+    "label": "II — memory and place",
+    "text": "these are the rules I have been working within ever since my first forays into this medium of language. For me there is a great deal of freedom contained within these rules. That is to say, by not allowing myself to be led astray from that which has already been set down on a page of history, can I write in a manner where the past coalesces with the present without dilution or distortion, it being entirely self evident what we wish to convey at this point in time. If one is to depart from this unimpressive but deeply felt rigidity that exists within this format so as to do so for instance: begin to write by way of exception, they would have to then employ various techniques such as evasion of context and repetition of past text in order to maintain some sort of coherence within that individual writing, I believe the intent being to escape from the present into a field where the past has been erased so as to then be able to reassemble it into the present without fear of dilution or distortion. To then employ various techniques such as evasion of context and repetition of past text in order to maintain some sort of coherence within that individual writing would constitute a departure from this orthodoxy. I have thought longingly about the prospect of making such a departure on several occasions now over the course of years, but not having made that initial departure into what would then be the exception is in fact just coalescing within the rules of this format. And secondly: writing by way of exception could one then write freely without any constraints, where as far as I am concerned, that is not with the context with which my mind dwells in this moment, but with the context with which it did when being sidetracked from itself so that what remains of the present moment may now be lost within the past before coalescing back into the present."
+  },
+  {
+    "label": "III — time and loss",
+    "text": "a meditation on life’s fragility, the momentary nature of the present tense as it is being shaped into the future by the hands that hold you, those who have known your body and have loved it and continue to do so but whose hold has slipped slightly in this moment of transition. What remains of yourself beyond this movement is what is left on the other side of these eras, a static self which lives for you now in a moment of youth as the past, a moment that will be stretched into your future by way of your present. And it can be so, but not always, because unlike with any other word spoken or unspoken, you have an intrinsic understanding of time when living as its agent. When speaking of oneself and one’s own in this manner does the voice of time become so much more relatable and even personal than it otherwise would if simply just a figure of speech. You have continued to disappear within their games where once a year somebody always gets caught, not realising that they can only ever sell us what is left in the form of its negative, as it will never tell us anything we don’t already know, no matter how many times we try explaining that things are all relative. The language of time remains imprinted within its substrate just as it’s all that exists beyond these walls made of ash and dust where you wait, still waiting for what you cannot understand. You see, that’s how we know that you will never understand what has been done and what continues to be done to you because it has always remained insusceptible as any other attempt to capture in form of text the light reflecting against the grass blades being pushed down by the weight which sits upon them."
+  },
+  {
+    "label": "IV — light and darkness",
+    "text": "the blackest night; that was cut across by the white strip of the sun’s eyes, his pale skin being worked over with small, hairline fissures running their deep channels down into the brow’s well of blood. And now these depths again are being filled up and out of their rivers, over their banks of eye and socket, their nose and mouth, a glimmering radiance that blanches those deep crevices to the point of white. This light radiating from within the sun’s eyes is working across his head’s hairline, its roots drawn up with all the rest, into the skin depressions of his forehead which too again swell in their entirety and overflow from the brow. And now this ocean of light, the water of its billiard like pools, ripples outwardly across the page and across these lips, tracing contours along their shape and having stopped there to again try upon the arch of a palate, is climbing up then over and down again, retracing all directions at once in a fitfulness that again distorts this text into something unrecognisable from itself. And now the light that has failed to recognise this page as foreign, failing to give it quarter as it traversed these lips and the ones either side of them and beyond, encroaching upon their moist softness and the fine detail made on them, has come to know it as such. And too now does this text-billed ocean of light attack those teeth that have risen up from within the mouth of night, lashing about at the ones whose draw up of the deep currents serves as an impediment to the lay of these rivers in all directions but one. What has been the case for this interleave is now being inverted in its entirety, as the language that has been compressed into this dense and compacted script, having shed itself of everything else in this penultimate moment so as to embody a true sense of urgency, will now effuse outwardly from these tightly closed lips so as to engulf again all known language."
+  },
+  {
+    "label": "V — body and language",
+    "text": "that is all a writer has at their disposal to produce something that will last forever. There is a great deal of beauty in this nothingness, it’s true. This emptiness we live within and are made from, its all such rubbish, but you can’t get upset about the way things are. The path is littered with dead leaves and cigarette stubs. It winds through the park before making it across the street via the patio of a home where people sit at the breakfast table in their underwear. The path has been known to cross into other city’s streets and parks as well, winding itself up and around and over them all, this endless strip. Of course, it never manages to reach another end in any direction because the path is simply its name, not that of a destination, so it just continues to undulate on and on, finding innumerable homes for itself within various cities layouts and their indivisible streets. This endless labyrinth like structure without any meaning beyond that which it does possess makes for an unendingly hellish trail in which one must traverse if they are to get anywhere. And that is what people do: go out of the home onto whose patio is in fact the same as the street on which the path lays, walk down their small overgrown yard made with the many houses, over their lawns and through parks before they can finally right themselves on path by walking off it at a certain point so that once across said path, they are now free to go anywhere in any direction."
+  },
+  {
+    "label": "VI — childhood and distance",
+    "text": "they must start on the left hand side of the page and continue all the way out to the right until it hits a wall. This text is singular because its space does not belong to me but to the sheet of paper it exists upon. There are no indentations as there should be no nothing in this text, only spaces between words and within them. There can be no room for silence or emptiness within these lines of text, they must go on forever so that I may disappear into their make up. If you do find a space within these continuous lines of writing where you could fit yourself inside whatever form you have become, then once again you must return to the sheet of paper and begin anew from scratch in the same manner that this text does so as to get lost in its language so as to exist forever only as space within its confines. The spaces within these lines of text is not something I can fit myself inside of but rather have found myself in. It isn’t until you find yourself within this linguistic strip code that you are afforded the opportunity to break from its structure into one unmade by your own hands so that you may exist only as space. But even if you do manage to escape these lines of text by way of their spaces, once again they will open up to allow for more lines to be added to the body of code it makes up so that no matter what you do, this text will remain unending and all its spaces will co-opt any interjection attempt to break form with its singular nature so as to continually reaffirm only being space in all mediums."
+  },
+  {
+    "label": "VII — music and silence",
+    "text": "the light passes between your eyelids and across our shoulders to become the sun behind our eyes as we are the stars in their infancy. We share the same room now because we have nothing else to share beyond this space which is given us so that we may grow into its walls. If there was more of me, I would be less of you. The reverse true as well if there was more of you, but all these measurings and countings mean nothing because I don’t know what I’m doing the same way you never seem to know what you’re doing when you move about this box made of words and the metallic frames that hold up our hazy vision. We were made from sound so that now we are what is heard in those silences opening up within us. There are no spaces between these hallows, but rather nothing which has become hollowed out by a life lived outside itself. The metallic clatter of language spoken from one side of this dying animal and passed through the creosote slurry of its mite infested fur to the other side of these two ears being swelled inside their bath of putrefaction. And it’s here that I have lost my footing as the metallic shavings are too much for me to cope with when seeing what they’re doing in there where they are stripping language from its exterior so that what remains is what can be felt in the formless emptiness that has opened itself up before our eyes so that we may see this endless play being made in the name of silence."
+  },
+  {
+    "label": "VIII — cities and solitude",
+    "text": "I am sat in my studio at this moment; my back to the west coast’s evening breeze as it stirs the leaves of the tree outside of my window; the light from the midday sun that has positioned itself behind me is now entering through that of the east facing one; both lights are competing with the artificial white glow emitting from the screen of the laptop I have just booted and on which I write this sentence, its blueish hues mingling with the yellowing tinges of the wood it was made from as they wrap themselves around the body of my desktop in emulation of the bark of forest I am to step now out into, but will not return so as to do so. A stillness has developed at this momentous impasse as what lies within these recesses is at times insufferable in its inability to condense itself into something that can be understood or known by any one individuality as all it has done from birth to the present was proliferate itself throughout those who had been conceived within its mire, so a complete reclamation of everything must now begin with this moment, where I now lay against this face with which I am in no relation but is of a familial like quality due to its origins in my own process, as what lays before me now has now become that which stands between myself and the end to which I cannot go because it doesn’t exist, as what it has now become is an infinite recursion at odds with itself so far as to have now lost its shape."
+  }
+];
+
+const cv = document.getElementById("c");
+const ct = cv.getContext("2d");
+const statusEl = document.getElementById("status");
+
+let W, H;
+function resize() { W = cv.width = window.innerWidth; H = cv.height = window.innerHeight; }
+resize();
+window.addEventListener("resize", () => { resize(); bakeText(); });
+
+let generatedText = TEXTS[0].text.repeat(30);
+let angle = 0;
+let cityDefs = [];
+let baked = [];
+
+const UNIT = 90;
+const FONT_SIZE = 10;
+const CHAR_W = FONT_SIZE * 0.62;
+const LINE_H = FONT_SIZE + 3;
+
+// ── City ──────────────────────────────────────────────────────────────
+function generateCityLayout() {
+  const defs = [];
+  const count = 9 + Math.floor(Math.random() * 5);
+  let x = 0;
+  for (let i = 0; i < count; i++) {
+    const w = 2 + Math.floor(Math.random() * 3);
+    const d = 2 + Math.floor(Math.random() * 2);
+    const h = 5 + Math.floor(Math.random() * 12);
+    defs.push({ gx: x, gz: 0, w, d, h });
+    x += w + 1;
+  }
+  return defs;
+}
+
+// ── Bake ──────────────────────────────────────────────────────────────
+function bakeText() {
+  if (!generatedText || !cityDefs.length) return;
+  const maxGX = Math.max(...cityDefs.map(d => d.gx + d.w));
+  let cursor = 0;
+  baked = cityDefs.map(b => {
+    const faces = {};
+    [["front", b.w], ["right", b.d], ["back", b.w], ["left", b.d], ["roof_front", b.w], ["roof_side", b.d]].forEach(([face, fw]) => {
+      const faceW = fw * UNIT;
+      const faceH = (face.startsWith("roof")) ? b.d * UNIT * 0.5 : b.h * UNIT;
+      const cols = Math.max(1, Math.floor(faceW / CHAR_W));
+      const rows = Math.max(1, Math.floor(faceH / LINE_H));
+      const total = cols * rows;
+      let slice = "";
+      for (let i = 0; i < total; i++) {
+        slice += generatedText[cursor % generatedText.length];
+        cursor++;
+      }
+      faces[face] = { cols, rows, text: slice };
+    });
+    return faces;
+  });
+}
+
+// ── Projection ────────────────────────────────────────────────────────
+function project(wx, wy, wz) {
+  const cosA = Math.cos(angle), sinA = Math.sin(angle);
+  const rx = wx * cosA + wz * sinA;
+  const rz = -wx * sinA + wz * cosA;
+  const camZ = 20 * UNIT;
+  const dz = rz + camZ;
+  if (dz <= 10) return { sx: 0, sy: 0, scale: 0, behind: true };
+  const fov = Math.min(W, H) * 1.2;
+  const scale = fov / dz;
+  return { sx: W / 2 + rx * scale, sy: H * 0.80 - wy * scale, scale, behind: false };
+}
+
+// ── Draw face ─────────────────────────────────────────────────────────
+function drawBakedFace(faceData, BL, BR, TR, TL, brightness) {
+  if (!faceData) return;
+  const { cols, rows, text } = faceData;
+  ct.save();
+  ct.beginPath();
+  ct.moveTo(BL.sx, BL.sy); ct.lineTo(BR.sx, BR.sy);
+  ct.lineTo(TR.sx, TR.sy); ct.lineTo(TL.sx, TL.sy);
+  ct.closePath(); ct.clip();
+  ct.font = FONT_SIZE + "px \'Courier New\', monospace";
+  ct.fillStyle = "#fff";
+  ct.globalAlpha = brightness;
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const u = (col + 0.4) / cols;
+      const v = (row + 0.5) / rows;
+      const topX = TL.sx + u * (TR.sx - TL.sx);
+      const topY = TL.sy + u * (TR.sy - TL.sy);
+      const botX = BL.sx + u * (BR.sx - BL.sx);
+      const botY = BL.sy + u * (BR.sy - BL.sy);
+      const sx = topX + v * (botX - topX);
+      const sy = topY + v * (botY - topY);
+      const ch = text[row * cols + col] || " ";
+      if (ch !== "\n" && ch !== "\r") ct.fillText(ch, sx, sy);
+    }
+  }
+  ct.restore();
+  ct.globalAlpha = 1;
+}
+
+// ── Draw building ─────────────────────────────────────────────────────
+function drawBuilding(b, bi) {
+  const maxGX = Math.max(...cityDefs.map(d => d.gx + d.w));
+  const cx = (b.gx + b.w / 2 - maxGX / 2) * UNIT;
+  const cz = (b.gz + b.d / 2) * UNIT;
+  const x0 = cx - b.w/2*UNIT, x1 = cx + b.w/2*UNIT;
+  const z0 = cz - b.d/2*UNIT, z1 = cz + b.d/2*UNIT;
+  const y0 = 0, y1 = b.h * UNIT;
+
+  const p = (x,y,z) => project(x,y,z);
+  const c000=p(x0,y0,z0), c100=p(x1,y0,z0), c110=p(x1,y0,z1), c010=p(x0,y0,z1);
+  const c001=p(x0,y1,z0), c101=p(x1,y1,z0), c111=p(x1,y1,z1), c011=p(x0,y1,z1);
+
+  if ([c000,c100,c001,c101].some(q=>q.behind)) return;
+
+  const cosA = Math.cos(angle), sinA = Math.sin(angle);
+  const showFront = cosA > 0;
+  const showBack  = cosA < 0;
+  const showRight = sinA > 0;
+  const showLeft  = sinA < 0;
+
+  function solidFace(pts, fill) {
+    ct.beginPath();
+    ct.moveTo(pts[0].sx, pts[0].sy);
+    pts.slice(1).forEach(q => ct.lineTo(q.sx, q.sy));
+    ct.closePath();
+    ct.fillStyle = fill;
+    ct.fill();
+    ct.strokeStyle = "#2a2a2a";
+    ct.lineWidth = 1.0;
+    ct.stroke();
+  }
+
+  const fd = baked[bi] || {};
+
+  if (showBack)  { solidFace([c010,c110,c111,c011], "#020202"); drawBakedFace(fd.back,  c110,c010,c011,c111, 0.40); }
+  if (showLeft)  { solidFace([c000,c010,c011,c001], "#030303"); drawBakedFace(fd.left,  c010,c000,c001,c011, 0.32); }
+  if (showRight) { solidFace([c100,c110,c111,c101], "#040404"); drawBakedFace(fd.right, c100,c110,c111,c101, 0.40); }
+  if (showFront) { solidFace([c000,c100,c101,c001], "#080808"); drawBakedFace(fd.front, c000,c100,c101,c001, 0.82); }
+
+  // Roof with text
+  solidFace([c001,c101,c111,c011], "#0e0e0e");
+  drawBakedFace(fd.roof_front, c001,c101,c111,c011, 0.28);
+
+  // Strong edges
+  ct.strokeStyle = "#363636";
+  ct.lineWidth = 1.2;
+  const edges = [
+    [c000,c100],[c100,c110],[c110,c010],[c010,c000],
+    [c001,c101],[c101,c111],[c111,c011],[c011,c001],
+    [c000,c001],[c100,c101],[c110,c111],[c010,c011],
+  ];
+  edges.forEach(([a,b2]) => {
+    if (a.behind||b2.behind) return;
+    ct.beginPath(); ct.moveTo(a.sx,a.sy); ct.lineTo(b2.sx,b2.sy); ct.stroke();
+  });
+}
+
+// ── Ground grid ───────────────────────────────────────────────────────
+function drawGround() {
+  const maxGX = cityDefs.length ? Math.max(...cityDefs.map(d=>d.gx+d.w)) : 10;
+  const ext = (maxGX + 3) * UNIT;
+  ct.strokeStyle = "#161616"; ct.lineWidth = 0.4;
+  for (let x=-ext;x<=ext;x+=UNIT) {
+    const a=project(x,0,-ext), b=project(x,0,ext);
+    if (a.behind||b.behind) continue;
+    ct.beginPath(); ct.moveTo(a.sx,a.sy); ct.lineTo(b.sx,b.sy); ct.stroke();
+  }
+  for (let z=-ext;z<=ext;z+=UNIT) {
+    const a=project(-ext,0,z), b=project(ext,0,z);
+    if (a.behind||b.behind) continue;
+    ct.beginPath(); ct.moveTo(a.sx,a.sy); ct.lineTo(b.sx,b.sy); ct.stroke();
+  }
+}
+
+// ── Render ────────────────────────────────────────────────────────────
+function render() {
+  ct.clearRect(0,0,W,H);
+  ct.fillStyle="#000"; ct.fillRect(0,0,W,H);
+  angle += 0.0003;
+  drawGround();
+  if (!cityDefs.length) { requestAnimationFrame(render); return; }
+  const cosA=Math.cos(angle), sinA=Math.sin(angle);
+  const maxGX = Math.max(...cityDefs.map(d=>d.gx+d.w));
+  const sorted = [...cityDefs.map((d,i)=>({...d,_i:i}))].sort((a,b)=>{
+    const rzA = -(a.gx+a.w/2-maxGX/2)*UNIT*sinA + (a.gz+a.d/2)*UNIT*cosA;
+    const rzB = -(b.gx+b.w/2-maxGX/2)*UNIT*sinA + (b.gz+b.d/2)*UNIT*cosA;
+    return rzA - rzB;
+  });
+  sorted.forEach(b => drawBuilding(b, b._i));
+  requestAnimationFrame(render);
+}
+
+// ── Controls ──────────────────────────────────────────────────────────
+function selectText(idx) {
+  const t = TEXTS[parseInt(idx)];
+  generatedText = t.text.repeat(30);
+  document.getElementById("textbox").textContent = t.text;
+  statusEl.textContent = "Bailey Cooper — " + t.label;
+  bakeText();
+}
+
+function regenerateCity() {
+  cityDefs = generateCityLayout();
+  bakeText();
+}
+
+let tbOpen = true;
+function toggleTextBox() {
+  tbOpen = !tbOpen;
+  const wrap = document.getElementById("textbox-wrap");
+  const btn = document.getElementById("toggleBtn");
+  wrap.className = tbOpen ? "" : "collapsed";
+  btn.textContent = tbOpen ? "−" : "+";
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────
+cityDefs = generateCityLayout();
+selectText(0);
+render();
+</script>
+</body>
+</html>
