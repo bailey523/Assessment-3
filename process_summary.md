@@ -1,5 +1,4 @@
 # AI Text City — Process Summary
-### Bailey Cooper
 
 ---
 
